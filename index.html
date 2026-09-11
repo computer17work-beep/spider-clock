@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spider Clock Widget</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    .widget-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ব্যাকগ্রাউন্ডের আবছা জাল ও গিয়ার (Spider Net) */
+    .spider-net-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0.15; /* হালকা অপাসিটি */
+      background: radial-gradient(circle, repeating-concentric-circles 0, repeating-concentric-circles 10px, transparent 10px, transparent 20px);
+      pointer-events: none;
+    }
+
+    /* ঘড়ির নম্বর */
+    .clock-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    .number {
+      position: absolute;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+    }
+    .n12 { top: 10px; left: 50%; transform: translateX(-50%); }
+    .n3  { right: 10px; top: 50%; transform: translateY(-50%); }
+    .n6  { bottom: 10px; left: 50%; transform: translateX(-50%); }
+    .n9  { left: 10px; top: 50%; transform: translateY(-50%); }
+
+    /* মাকড়সা ও কাঁটা */
+    .spider-body {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      z-index: 10;
+    }
+
+    /* দুই পা নড়াচড়ার অ্যানিমেশন */
+    @keyframes legWiggleLeft {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-8deg); }
+    }
+    @keyframes legWiggleRight {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(8deg); }
+    }
+
+    .leg-bottom-left {
+      transform-origin: top right;
+      animation: legWiggleLeft 1.2s infinite ease-in-out;
+    }
+    .leg-bottom-right {
+      transform-origin: top left;
+      animation: legWiggleRight 1.2s infinite ease-in-out;
+    }
+
+    /* ঘড়ির কাঁটা (মাকড়সার পেছনের লম্বা অংশ) */
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      background: #000;
+      border-radius: 4px;
+    }
+    .hour-hand { width: 4px; height: 60px; z-index: 2; }
+    .minute-hand { width: 3px; height: 85px; z-index: 3; }
+    .second-hand { width: 1.5px; height: 95px; background: #d32f2f; z-index: 4; }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <!-- ব্যাকগ্রাউন্ড হালকা জাল -->
+    <svg class="spider-net-bg" viewBox="0 0 200 200">
+      <g stroke="#000" stroke-width="0.8" fill="none">
+        <path d="M100 0 L100 200 M0 100 L200 100 M29 29 L171 171 M29 171 L171 29"/>
+        <circle cx="100" cy="100" r="20"/>
+        <circle cx="100" cy="100" r="40"/>
+        <circle cx="100" cy="100" r="60"/>
+        <circle cx="100" cy="100" r="80"/>
+      </g>
+    </svg>
+
+    <!-- ঘড়ির সংখ্যা -->
+    <div class="clock-face">
+      <span class="number n12">12</span>
+      <span class="number n3">3</span>
+      <span class="number n6">6</span>
+      <span class="number n9">9</span>
+    </div>
+
+    <!-- ঘড়ির কাঁটা -->
+    <div class="hand hour-hand" id="hour"></div>
+    <div class="hand minute-hand" id="minute"></div>
+    <div class="hand second-hand" id="second"></div>
+
+    <!-- সেন্টারে অ্যানিমেটেড স্পাইডার -->
+    <svg class="spider-body" viewBox="0 0 100 100">
+      <!-- বডি -->
+      <ellipse cx="50" cy="50" rx="8" ry="12" fill="#000"/>
+      <circle cx="50" cy="36" r="5" fill="#000"/>
+      
+      <!-- উপরের পাগুলো -->
+      <path d="M 45 45 Q 30 30 20 40" stroke="#000" stroke-width="2" fill="none"/>
+      <path d="M 55 45 Q 70 30 80 40" stroke="#000" stroke-width="2" fill="none"/>
+      
+      <!-- নীচের দুই পা (যা অ্যানিমেট হবে) -->
+      <path class="leg-bottom-left" d="M 45 55 Q 30 75 25 85" stroke="#000" stroke-width="2" fill="none"/>
+      <path class="leg-bottom-right" d="M 55 55 Q 70 75 75 85" stroke="#000" stroke-width="2" fill="none"/>
+    </svg>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const sec = now.getSeconds();
+      const min = now.getMinutes();
+      const hr = now.getHours();
+
+      const secDeg = (sec / 60) * 360;
+      const minDeg = ((min + sec / 60) / 60) * 360;
+      const hrDeg = ((hr % 12 + min / 60) / 12) * 360;
+
+      document.getElementById('second').style.transform = `translateX(-50%) rotate(${secDeg}deg)`;
+      document.getElementById('minute').style.transform = `translateX(-50%) rotate(${minDeg}deg)`;
+      document.getElementById('hour').style.transform = `translateX(-50%) rotate(${hrDeg}deg)`;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
